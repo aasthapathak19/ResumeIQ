@@ -3,6 +3,7 @@ import React from 'react'
 interface Suggestion {
   type: "good" | "improve";
   tip: string;
+  explanation?: string;
 }
 
 interface ATSProps {
@@ -52,15 +53,30 @@ const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
         {/* Suggestions list */}
         <div className="space-y-3">
           {suggestions.map((suggestion, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <img
-                src={suggestion.type === "good" ? "/icons/check.svg" : "/icons/warning.svg"}
-                alt={suggestion.type === "good" ? "Check" : "Warning"}
-                className="w-5 h-5 mt-1"
-              />
-              <p className={suggestion.type === "good" ? "text-green-700" : "text-amber-700"}>
-                {suggestion.tip}
-              </p>
+            <div key={index} className={`flex flex-col gap-1 rounded-xl p-3 ${
+              suggestion.type === "good"
+                ? "bg-green-50 border border-green-200"
+                : "bg-amber-50 border border-amber-200"
+            }`}>
+              <div className="flex items-center gap-2">
+                <img
+                  src={suggestion.type === "good" ? "/icons/check.svg" : "/icons/warning.svg"}
+                  alt={suggestion.type === "good" ? "Check" : "Warning"}
+                  className="w-5 h-5"
+                />
+                <p className={`font-semibold ${
+                  suggestion.type === "good" ? "text-green-700" : "text-amber-700"
+                }`}>
+                  {suggestion.tip}
+                </p>
+              </div>
+              {suggestion.explanation && (
+                <p className={`text-sm ml-7 ${
+                  suggestion.type === "good" ? "text-green-600" : "text-amber-700"
+                }`}>
+                  {suggestion.explanation}
+                </p>
+              )}
             </div>
           ))}
         </div>
