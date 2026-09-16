@@ -8,6 +8,7 @@
     "dev": "nodemon src/server.ts",
     "build": "tsc",
     "worker": "ts-node src/workers/index.ts",
+    "worker:prod": "node dist/workers/index.js",
     "worker:dev": "nodemon src/workers/index.ts"
   },
   "dependencies": {

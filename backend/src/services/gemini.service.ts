@@ -27,12 +27,14 @@ export const analyzeResumeContent = async (filePath: string, jobDescription?: st
           "skills": number (0-100),
           "education": number (0-100)
         },
-        "suggestions": string[] (3 actionable tips to improve the resume)
+        "suggestions": string[] (3 actionable tips to improve the resume),
+        "coverLetter": string (A professional, engaging cover letter drafted based on the resume),
+        "interviewQuestions": string[] (5 targeted technical or behavioral interview questions to prepare for)
       }
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash', // Using Gemini 2.5 Flash as it is fast and handles documents well
+      model: 'gemini-3.6-flash', // Updated to the latest required model
       contents: [
         {
           role: 'user',

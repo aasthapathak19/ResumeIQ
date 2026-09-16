@@ -15,6 +15,8 @@ export interface IAnalysis extends Document {
     education?: number;
   };
   suggestions: string[];
+  coverLetter?: string;
+  interviewQuestions?: string[];
   createdAt: Date;
 }
 
@@ -33,6 +35,8 @@ const AnalysisSchema: Schema = new Schema({
     education: { type: Number },
   },
   suggestions: [{ type: String }],
+  coverLetter: { type: String },
+  interviewQuestions: [{ type: String }],
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -30,6 +30,8 @@ export const startAiWorker = () => {
         missingKeywords: analysisResult.missingKeywords,
         sectionScores: analysisResult.sectionScores,
         suggestions: analysisResult.suggestions,
+        coverLetter: analysisResult.coverLetter,
+        interviewQuestions: analysisResult.interviewQuestions,
       });
       await analysis.save();
 

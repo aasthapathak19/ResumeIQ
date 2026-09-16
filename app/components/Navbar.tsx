@@ -22,12 +22,12 @@ const Navbar = () => {
             <div className="navbar-actions">
                 <DarkModeToggle />
                 {isAuthenticated ? (
-                    <button onClick={logout} className="text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">
+                    <button onClick={logout} className="text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
                         Log Out
                     </button>
                 ) : (
                     <div className="flex items-center gap-4 ml-2">
-                        <Link to="/auth" className="text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">
+                        <Link to="/auth" className="text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
                             Log In
                         </Link>
                         <Link to="/auth?mode=signup" className="text-sm font-semibold bg-[#0066cc] text-white px-4 py-2 rounded-full hover:bg-[#0052a3] transition-colors">

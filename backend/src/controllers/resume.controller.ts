@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
+import fs from 'fs';
 import Resume from '../models/Resume';
+import Analysis from '../models/Analysis';
 import { getAiQueue } from '../config/redis';
 
 export const uploadResume = async (req: Request, res: Response) => {
@@ -83,9 +85,18 @@ export const deleteResume = async (req: Request, res: Response) => {
     if (!resume) {
       return res.status(404).json({ error: 'Resume not found' });
     }
-    // Note: Would also want to delete file from disk/S3 here in production
+    
+    // Delete associated AI Analysis
+    await Analysis.findOneAndDelete({ resumeId: resume._id });
+
+    // Delete physical file
+    if (resume.filePath && fs.existsSync(resume.filePath)) {
+        fs.unlinkSync(resume.filePath);
+    }
+    
     res.status(200).json({ message: 'Resume deleted successfully' });
   } catch (error) {
+    console.error('Error deleting resume:', error);
     res.status(500).json({ error: 'Server error deleting resume' });
   }
 };

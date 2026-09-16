@@ -201,8 +201,29 @@ const Resume = () => {
                     {activeTab === "cover-letter" && resumeData && (
                         <div className="tab-content animate-in fade-in duration-500">
                             <div className="p-8 bg-white rounded-2xl gradient-border">
-                                <h2 className="text-2xl font-bold mb-4">Cover Letter Generation</h2>
-                                <p>Cover letter API endpoints are under construction. Stay tuned!</p>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-2xl font-bold">AI Generated Cover Letter</h2>
+                                    <button 
+                                        className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 font-semibold"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(feedback?.coverLetter || "");
+                                            alert("Cover letter copied!");
+                                        }}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        </svg>
+                                        Copy
+                                    </button>
+                                </div>
+                                
+                                {feedback?.coverLetter ? (
+                                    <div className="prose max-w-none text-gray-700 whitespace-pre-wrap font-serif leading-relaxed">
+                                        {feedback.coverLetter}
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-500 italic">No cover letter generated yet.</p>
+                                )}
                             </div>
                         </div>
                     )}
@@ -211,8 +232,22 @@ const Resume = () => {
                     {activeTab === "interview" && resumeData && (
                         <div className="tab-content animate-in fade-in duration-500">
                              <div className="p-8 bg-white rounded-2xl gradient-border">
-                                <h2 className="text-2xl font-bold mb-4">Interview Preparation</h2>
-                                <p>Interview prep endpoints are under construction. Stay tuned!</p>
+                                <h2 className="text-2xl font-bold mb-6">Targeted Interview Questions</h2>
+                                
+                                {feedback?.interviewQuestions && feedback.interviewQuestions.length > 0 ? (
+                                    <ul className="space-y-6">
+                                        {feedback.interviewQuestions.map((q: string, i: number) => (
+                                            <li key={i} className="flex gap-4 items-start p-4 bg-gray-50 rounded-xl">
+                                                <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-700 font-bold rounded-full">
+                                                    {i + 1}
+                                                </span>
+                                                <p className="text-gray-800 font-medium text-lg pt-1">{q}</p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-gray-500 italic">No interview questions generated yet.</p>
+                                )}
                             </div>
                         </div>
                     )}

@@ -46,6 +46,15 @@ export default function Home() {
     }
   }, [isAuthenticated]);
 
+  const handleDeleteResume = async (id: string) => {
+    try {
+      setResumes((prev) => prev.filter((r) => r._id !== id));
+      await api.resumes.delete(id);
+    } catch (err) {
+      console.error("Failed to delete resume:", err);
+    }
+  };
+
   if (isLoading) return null;
 
   return (
@@ -78,9 +87,9 @@ export default function Home() {
                  + New Scan
                </Link>
             </div>
-            <div className="resumes-section justify-start gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 pb-12 w-full text-left">
               {resumes.map((resume) => (
-                  <ResumeCard key={resume._id} resume={resume} />
+                  <ResumeCard key={resume._id} resume={resume} onDelete={handleDeleteResume} />
               ))}
             </div>
           </div>

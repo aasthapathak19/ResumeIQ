@@ -39,6 +39,25 @@ services:
       - mongodb
       - redis
 
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: resume-iq-worker
+    restart: unless-stopped
+    command: npm run worker:prod
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/resumeiq
+      - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - mongodb
+      - redis
+
   mongodb:
     image: mongo:6
     container_name: resume-iq-mongodb
