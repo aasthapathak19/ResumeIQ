@@ -1,4 +1,4 @@
-import { Worker } from 'bullmq';
+import { Worker, QueueEvents } from 'bullmq';
 import Redis from 'ioredis';
 import { analyzeResumeContent } from '../services/gemini.service';
 import { calculateATSScore } from '../services/scoring.service';
@@ -55,10 +55,31 @@ export const startAiWorker = () => {
     }
   }, { connection: redisConnection });
 
-  worker.on('failed', async (job, err) => {
-    console.error(`Job ${job?.id} has finally failed after all attempts: ${err.message}`);
-    if (job?.data?.resumeId) {
-      await Resume.findByIdAndUpdate(job.data.resumeId, { status: 'failed' }).catch(e => console.error(e));
+  const queueEvents = new QueueEvents('ai-processing-queue', { connection: redisConnection });
+
+  queueEvents.on('failed', async ({ jobId, failedReason }) => {
+    // BullMQ QueueEvents 'failed' fires when a job finally exhausts all retries or fails permanently.
+    console.error(`Job ${jobId} has permanently failed: ${failedReason}`);
+    try {
+      // We need to fetch the job to get the resumeId
+      const { Job } = await import('bullmq');
+      const job = await Job.fromId(worker.opts.connection as any, jobId);
+      if (job?.data?.resumeId) {
+        await Resume.findByIdAndUpdate(job.data.resumeId, { status: 'failed' });
+        console.log(`Updated Resume ${job.data.resumeId} status to failed.`);
+      }
+    } catch (e) {
+      console.error(`Failed to update DB for failed job ${jobId}:`, e);
+    }
+  });
+
+  // Log transient attempt errors from the local worker
+  worker.on('failed', (job, err) => {
+    if (job) {
+      const maxAttempts = job.opts.attempts || 1;
+      if (job.attemptsMade < maxAttempts) {
+         console.warn(`Job ${job.id} failed attempt ${job.attemptsMade} of ${maxAttempts}. Will retry. Error: ${err.message}`);
+      }
     }
   });
 

@@ -144,8 +144,29 @@ const getSharedResume = async (req, res) => {
             return res.status(404).json({ error: 'Shared resume not found' });
         }
         const analysis = await Analysis_1.default.findOne({ resumeId: resume._id });
-        // We shouldn't leak the original _id or userId here, but for simplicity we will just return the resume object and analysis.
-        res.status(200).json({ resume, analysis });
+        // Exclude private identifiers and metadata from the response
+        const publicResume = {
+            originalName: resume.originalName,
+            status: resume.status,
+            jobTitle: resume.jobTitle,
+            companyName: resume.companyName,
+            createdAt: resume.createdAt,
+        };
+        let publicAnalysis = null;
+        if (analysis) {
+            publicAnalysis = {
+                atsScore: analysis.atsScore,
+                summary: analysis.summary,
+                strengths: analysis.strengths,
+                weaknesses: analysis.weaknesses,
+                missingKeywords: analysis.missingKeywords,
+                suggestions: analysis.suggestions,
+                scoreBreakdown: analysis.scoreBreakdown,
+                interviewQuestions: analysis.interviewQuestions,
+                createdAt: analysis.createdAt,
+            };
+        }
+        res.status(200).json({ resume: publicResume, analysis: publicAnalysis });
     }
     catch (error) {
         res.status(500).json({ error: 'Server error fetching shared resume' });
