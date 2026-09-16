@@ -12,7 +12,7 @@ const ResumeCard = ({ resume, onDelete }: { resume: any; onDelete: (id: string) 
 
     return (
         <Link to={`/resume/${resume._id}`} className="group relative bg-white dark:bg-[#1e2130] rounded-2xl border border-gray-200 dark:border-gray-800 p-6 flex flex-col gap-4 shadow-sm hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300">
-            <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-4 right-4 z-10 transition-opacity">
                 <button 
                     onClick={handleDelete}
                     className="p-2 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition-colors"

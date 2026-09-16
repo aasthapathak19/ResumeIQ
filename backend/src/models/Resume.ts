@@ -6,6 +6,7 @@ export interface IResume extends Document {
   fileName: string;
   filePath: string;
   previewPath?: string;
+  shareToken?: string;
   fileSize: number;
   mimeType: string;
   status: 'uploaded' | 'processing' | 'analyzing' | 'completed' | 'failed';
@@ -18,10 +19,14 @@ const ResumeSchema: Schema = new Schema({
   fileName: { type: String, required: true },
   filePath: { type: String, required: true },
   previewPath: { type: String },
+  shareToken: { type: String, unique: true, index: true },
   fileSize: { type: Number, required: true },
   mimeType: { type: String, required: true },
   status: { type: String, enum: ['uploaded', 'processing', 'analyzing', 'completed', 'failed'], default: 'uploaded' },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now, index: true },
 });
+
+// Compound index for getting user's resumes sorted by date (used in getAllResumes)
+ResumeSchema.index({ userId: 1, createdAt: -1 });
 
 export default mongoose.model<IResume>('Resume', ResumeSchema);

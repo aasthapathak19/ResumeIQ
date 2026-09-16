@@ -1,78 +1,98 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+import { User, Resume, Analysis, AuthResponse } from '~/types';
 
-const getHeaders = () => {
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const getHeaders = (isFormData = false) => {
   const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
-  };
+  const headers: Record<string, string> = {};
+  
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
 };
+
+// Generic request wrapper
+async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
+  const response = await fetch(url, options);
+  
+  if (!response.ok) {
+    let errorMsg = 'An error occurred';
+    try {
+      const errorData = await response.json();
+      errorMsg = errorData.error || errorData.message || errorMsg;
+    } catch (e) {
+      // Ignore if not json
+    }
+    throw new Error(errorMsg);
+  }
+  
+  return response.json();
+}
 
 export const api = {
   auth: {
-    register: async (data: any) => {
-      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+    register: (data: any): Promise<AuthResponse> => 
+      request<AuthResponse>(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify(data),
-      });
-      return res.json();
-    },
-    login: async (data: any) => {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      }),
+    login: (data: any): Promise<AuthResponse> => 
+      request<AuthResponse>(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify(data),
-      });
-      return res.json();
-    },
-    me: async () => {
-      const res = await fetch(`${API_BASE_URL}/auth/me`, {
+      }),
+    me: (): Promise<User> => 
+      request<User>(`${API_BASE_URL}/auth/me`, {
         headers: getHeaders(),
-      });
-      return res.json();
-    }
+      })
   },
   resumes: {
-    upload: async (formData: FormData) => {
-      // FormData doesn't need Content-Type header, fetch sets it automatically with boundary
-      const token = localStorage.getItem('token');
-      const headers: any = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      const res = await fetch(`${API_BASE_URL}/resumes/upload`, {
+    upload: (formData: FormData): Promise<{ message: string; resume: Resume }> => 
+      request<{ message: string; resume: Resume }>(`${API_BASE_URL}/resumes/upload`, {
         method: 'POST',
-        headers,
+        headers: getHeaders(true),
         body: formData,
-      });
-      return res.json();
-    },
-    getAll: async () => {
-      const res = await fetch(`${API_BASE_URL}/resumes`, {
+      }),
+    getAll: (): Promise<Resume[]> => 
+      request<Resume[]>(`${API_BASE_URL}/resumes`, {
         headers: getHeaders(),
-      });
-      return res.json();
-    },
-    getById: async (id: string) => {
-      const res = await fetch(`${API_BASE_URL}/resumes/${id}`, {
+      }),
+    getById: (id: string): Promise<Resume> => 
+      request<Resume>(`${API_BASE_URL}/resumes/${id}`, {
         headers: getHeaders(),
-      });
-      return res.json();
+      }),
+    getFile: async (id: string): Promise<Blob> => {
+      const res = await fetch(`${API_BASE_URL}/resumes/${id}/file`, { headers: getHeaders(true) });
+      if (!res.ok) throw new Error('Failed to fetch file');
+      return res.blob();
     },
-    delete: async (id: string) => {
-      const res = await fetch(`${API_BASE_URL}/resumes/${id}`, {
+    delete: (id: string): Promise<{ message: string }> => 
+      request<{ message: string }>(`${API_BASE_URL}/resumes/${id}`, {
         method: 'DELETE',
         headers: getHeaders(),
-      });
-      return res.json();
-    }
+      })
   },
   ai: {
-    getAnalysis: async (resumeId: string) => {
-      const res = await fetch(`${API_BASE_URL}/ai/analysis/${resumeId}`, {
+    getAnalysis: (resumeId: string): Promise<Analysis> => 
+      request<Analysis>(`${API_BASE_URL}/ai/analysis/${resumeId}`, {
         headers: getHeaders(),
-      });
-      return res.json();
+      })
+  },
+  share: {
+    getSharedAnalysis: (token: string): Promise<{ resume: Resume, analysis: Analysis }> =>
+      request<{ resume: Resume, analysis: Analysis }>(`${API_BASE_URL}/share/${token}`),
+    getSharedFile: async (token: string): Promise<Blob> => {
+      const res = await fetch(`${API_BASE_URL}/share/${token}/file`);
+      if (!res.ok) throw new Error('Failed to fetch shared file');
+      return res.blob();
     }
   }
 };

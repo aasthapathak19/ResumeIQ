@@ -1,11 +1,13 @@
 import { Worker } from 'bullmq';
 import Redis from 'ioredis';
 import { analyzeResumeContent } from '../services/gemini.service';
+import { calculateATSScore } from '../services/scoring.service';
+import { config } from '../config/env';
 import Resume from '../models/Resume';
 import Analysis from '../models/Analysis';
 
 export const startAiWorker = () => {
-  const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+  const redisConnection = new Redis(config.redisUrl, {
     maxRetriesPerRequest: null
   });
 
@@ -17,40 +19,58 @@ export const startAiWorker = () => {
       // 1. Update resume status to analyzing
       await Resume.findByIdAndUpdate(resumeId, { status: 'analyzing' });
 
-      // 2. Call Gemini Service
-      const analysisResult = await analyzeResumeContent(filePath, jobDescription);
+      // 2. Call Gemini Service (Extract features)
+      const aiExtraction = await analyzeResumeContent(filePath, jobDescription);
 
-      // 3. Save Analysis to DB
+      // 3. Compute Deterministic ATS Score
+      const scoringResult = calculateATSScore(aiExtraction, jobDescription);
+
+      // 4. Save Analysis to DB
       const analysis = new Analysis({
         resumeId,
-        atsScore: analysisResult.atsScore,
-        summary: analysisResult.summary,
-        strengths: analysisResult.strengths,
-        weaknesses: analysisResult.weaknesses,
-        missingKeywords: analysisResult.missingKeywords,
-        sectionScores: analysisResult.sectionScores,
-        suggestions: analysisResult.suggestions,
-        coverLetter: analysisResult.coverLetter,
-        interviewQuestions: analysisResult.interviewQuestions,
+        atsScore: scoringResult.overallScore,
+        scoreBreakdown: scoringResult.breakdown,
+        scoringVersion: scoringResult.version,
+        aiModel: 'gemini-3.6-flash',
+        promptVersion: 'v2.0-extraction',
+        jobDescription: jobDescription,
+        summary: aiExtraction.summary,
+        strengths: aiExtraction.strengths,
+        weaknesses: aiExtraction.weaknesses,
+        missingKeywords: aiExtraction.missingKeywords,
+        suggestions: aiExtraction.suggestions,
+        coverLetter: aiExtraction.coverLetter,
+        interviewQuestions: aiExtraction.interviewQuestions,
       });
       await analysis.save();
 
-      // 4. Update resume status to completed
+      // 5. Update resume status to completed
       await Resume.findByIdAndUpdate(resumeId, { status: 'completed' });
 
       console.log(`Successfully completed job ${job.id}`);
-      return analysisResult;
+      return analysis;
     } catch (error) {
-      console.error(`Failed to process job ${job.id}:`, error);
-      // Mark as failed
-      await Resume.findByIdAndUpdate(resumeId, { status: 'failed' });
+      console.error(`Failed to process job ${job.id} (Attempt ${job.attemptsMade + 1}):`, error);
       throw error;
     }
   }, { connection: redisConnection });
 
-  worker.on('failed', (job, err) => {
-    console.error(`Job ${job?.id} has failed with ${err.message}`);
+  worker.on('failed', async (job, err) => {
+    console.error(`Job ${job?.id} has finally failed after all attempts: ${err.message}`);
+    if (job?.data?.resumeId) {
+      await Resume.findByIdAndUpdate(job.data.resumeId, { status: 'failed' }).catch(e => console.error(e));
+    }
   });
+
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`Received ${signal}, closing worker gracefully...`);
+    await worker.close();
+    await redisConnection.quit();
+    process.exit(0);
+  };
+
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
   console.log('🤖 AI Worker is running and listening to queue...');
 };

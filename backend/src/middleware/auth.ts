@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { config } from '../config/env';
 
 // Extend Express Request interface to include the user object
 declare global {
@@ -22,7 +23,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
   const token = authHeader.split(' ')[1];
 
   try {
-    const secret = process.env.JWT_SECRET || 'secret';
+    const secret = config.jwtSecret;
     const decoded = jwt.verify(token, secret) as { id: string };
     
     // Attach the user ID to the request object

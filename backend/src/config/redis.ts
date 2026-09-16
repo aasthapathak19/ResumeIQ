@@ -1,12 +1,13 @@
 import Redis from 'ioredis';
 import { Queue } from 'bullmq';
+import { config } from './env';
 
 let redisClient: Redis;
 let aiQueue: Queue;
 
 export const connectRedis = async (): Promise<void> => {
   try {
-    const redisUrl = process.env.REDIS_URL;
+    const redisUrl = config.redisUrl;
     if (!redisUrl) {
       throw new Error('REDIS_URL is not defined in the environment variables');
     }

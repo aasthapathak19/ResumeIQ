@@ -17,6 +17,17 @@ export interface IAnalysis extends Document {
   suggestions: string[];
   coverLetter?: string;
   interviewQuestions?: string[];
+  scoreBreakdown?: {
+    keywordMatch: number;
+    skillsMatch: number;
+    structure: number;
+    experience: number;
+    semanticMatch: number;
+  };
+  scoringVersion?: string;
+  aiModel?: string;
+  promptVersion?: string;
+  jobDescription?: string;
   createdAt: Date;
 }
 
@@ -34,10 +45,24 @@ const AnalysisSchema: Schema = new Schema({
     skills: { type: Number },
     education: { type: Number },
   },
+  scoreBreakdown: {
+    keywordMatch: { type: Number },
+    skillsMatch: { type: Number },
+    structure: { type: Number },
+    experience: { type: Number },
+    semanticMatch: { type: Number },
+  },
+  scoringVersion: { type: String },
+  aiModel: { type: String },
+  promptVersion: { type: String },
+  jobDescription: { type: String },
   suggestions: [{ type: String }],
   coverLetter: { type: String },
   interviewQuestions: [{ type: String }],
   createdAt: { type: Date, default: Date.now },
 });
+
+// Index for fetching analysis by resumeId
+AnalysisSchema.index({ resumeId: 1 });
 
 export default mongoose.model<IAnalysis>('Analysis', AnalysisSchema);

@@ -3,24 +3,28 @@ import { useEffect, useState } from "react";
 import { useAuth } from "~/context/AuthContext";
 import { api } from "~/lib/api";
 
-import ATS from "~/components/ATS";
 import StrengthsWeaknesses from "~/components/StrengthsWeaknesses";
 import MissingKeywords from "~/components/MissingKeywords";
 import ScoreCircle from "~/components/ScoreCircle";
+import ScoreBreakdown from "~/components/ScoreBreakdown";
+import ResumePreview from "~/components/ResumePreview";
+import ResultTabs from "~/components/ResultTabs";
+
+import { Resume as ResumeType, Analysis } from "~/types";
 
 export const meta = () => [
     { title: "ResumeIQ | Resume Review" },
     { name: "description", content: "Detailed AI-powered review of your resume" },
 ];
 
-type Tab = "analysis" | "cover-letter" | "interview";
+export type Tab = "analysis" | "cover-letter" | "interview";
 
 const Resume = () => {
     const { isAuthenticated, isLoading } = useAuth();
     const { id } = useParams();
-    const [resumeData, setResumeData] = useState<any | null>(null);
+    const [resumeData, setResumeData] = useState<ResumeType | null>(null);
     const [resumeUrl, setResumeUrl] = useState("");
-    const [feedback, setFeedback] = useState<any | null>(null);
+    const [feedback, setFeedback] = useState<Analysis | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>("analysis");
     const [shareLink, setShareLink] = useState("");
     const [shareCopied, setShareCopied] = useState(false);
@@ -38,19 +42,30 @@ const Resume = () => {
             try {
                 // Fetch resume metadata
                 const resumeRes = await api.resumes.getById(id);
-                if (resumeRes.error) return;
                 setResumeData(resumeRes);
                 
-                // Construct URL to static file served by Node backend
-                setResumeUrl(`http://localhost:5000/uploads/resumes/${resumeRes.userId}/${resumeRes.fileName}`);
-
-                // Fetch AI analysis
-                const analysisRes = await api.ai.getAnalysis(id);
-                if (!analysisRes.error) {
-                    setFeedback(analysisRes);
+                // Fetch physical file securely via API
+                try {
+                    const blob = await api.resumes.getFile(id);
+                    const url = URL.createObjectURL(blob);
+                    setResumeUrl(url);
+                } catch (fileErr) {
+                    console.error("Failed to load resume file:", fileErr);
                 }
 
-                setShareLink(`${window.location.origin}/share/${id}`);
+                // Fetch AI analysis
+                try {
+                    const analysisRes = await api.ai.getAnalysis(id);
+                    setFeedback(analysisRes);
+                } catch (aiErr) {
+                    console.error("Analysis not ready or failed:", aiErr);
+                }
+
+                if (resumeRes.shareToken) {
+                    setShareLink(`${window.location.origin}/share/${resumeRes.shareToken}`);
+                } else {
+                    setShareLink(`${window.location.origin}/share/${id}`);
+                }
             } catch (err) {
                 console.error("Failed to load resume details:", err);
             }
@@ -108,21 +123,7 @@ const Resume = () => {
 
             <div className="flex flex-row w-full max-lg:flex-col-reverse">
                 {/* Left: Resume Preview */}
-                <section className="feedback-section bg-[url('/images/bg-small.svg')] bg-cover h-[100vh] sticky top-0 items-center justify-center no-print">
-                    {resumeUrl ? (
-                        <div className="animate-in fade-in duration-1000 gradient-border max-sm:m-0 h-[90%] max-wxl:h-fit w-fit">
-                            <iframe
-                                src={resumeUrl}
-                                className="w-[400px] h-full rounded-2xl"
-                                title="Resume Preview"
-                            />
-                        </div>
-                    ) : (
-                        <div className="flex items-center justify-center h-full">
-                            <img src="/images/resume-scan-2.gif" className="w-[200px]" alt="Loading..." />
-                        </div>
-                    )}
-                </section>
+                <ResumePreview resumeUrl={resumeUrl} />
 
                 {/* Right: Feedback */}
                 <section className="feedback-section">
@@ -135,19 +136,7 @@ const Resume = () => {
                         )}
 
                         {/* Tabs */}
-                        <div className="result-tabs no-print">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    className={`result-tab ${activeTab === tab.id ? "result-tab-active" : ""}`}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    id={`tab-${tab.id}`}
-                                >
-                                    <span>{tab.icon}</span>
-                                    <span>{tab.label}</span>
-                                </button>
-                            ))}
-                        </div>
+                        <ResultTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
                     </div>
 
                     {!feedback && (
@@ -163,11 +152,14 @@ const Resume = () => {
                             </div>
 
                             {/* Score Summary + Match Gauge */}
-                            <div className="summary-match-row flex items-center justify-between">
+                            <div className="flex flex-col gap-6">
                                 <div className="summary-match-scores flex flex-col gap-2">
-                                    <h3 className="text-xl font-bold">ATS Score</h3>
+                                    <h3 className="text-xl font-bold">Overall Match Score</h3>
                                     <ScoreCircle score={feedback.atsScore} />
                                 </div>
+                                {feedback.scoreBreakdown && (
+                                    <ScoreBreakdown breakdown={feedback.scoreBreakdown} />
+                                )}
                             </div>
 
                             {/* Strengths & Weaknesses */}

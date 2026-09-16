@@ -4,17 +4,15 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import { connectRedis } from './config/redis';
-
-// Load environment variables
-dotenv.config();
+import { config } from './config/env';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = config.port;
 
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: 'http://localhost:3000', // Allow frontend
+  origin: config.frontendUrl, // Configurable frontend origin
   credentials: true,
 }));
 app.use(express.json());
@@ -23,19 +21,24 @@ app.use(express.urlencoded({ extended: true }));
 import authRoutes from './routes/auth.routes';
 import resumeRoutes from './routes/resume.routes';
 import aiRoutes from './routes/ai.routes';
-
-// Serve uploaded files statically for local development
-app.use('/uploads', express.static(process.env.UPLOAD_DIR || '/app/uploads'));
+import shareRoutes from './routes/share.routes';
+import { apiLimiter } from './middleware/rateLimiter';
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/resumes', resumeRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/api/auth', authRoutes); // Auth routes have their own specific limiters inside
+app.use('/api/resumes', apiLimiter, resumeRoutes); // Apply general API limit
+app.use('/api/ai', apiLimiter, aiRoutes); // Apply general API limit
+app.use('/api/share', shareRoutes); // Share routes have their own rate limits
+
+import { errorHandler } from './middleware/error';
 
 // Basic health check route
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Backend is running' });
 });
+
+// Centralized error handler should be the last middleware
+app.use(errorHandler);
 
 // Start Server
 const startServer = async () => {

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import { config } from '../config/env';
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -22,7 +23,7 @@ export const register = async (req: Request, res: Response) => {
     const user = new User({ name, email, passwordHash });
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', {
+    const token = jwt.sign({ id: user._id }, config.jwtSecret, {
       expiresIn: '7d',
     });
 
@@ -46,7 +47,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', {
+    const token = jwt.sign({ id: user._id }, config.jwtSecret, {
       expiresIn: '7d',
     });
 

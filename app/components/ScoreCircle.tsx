@@ -45,7 +45,7 @@ const ScoreCircle = ({ score = 75 }: { score: number }) => {
 
             {/* Score and issues */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-semibold text-sm text-gray-900 dark:text-white">{`${score}/100`}</span>
+                <span className="font-bold text-lg text-black dark:text-white">{`${score}/100`}</span>
             </div>
         </div>
     );

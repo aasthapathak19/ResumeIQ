@@ -22,7 +22,7 @@ const Navbar = () => {
             <div className="navbar-actions">
                 <DarkModeToggle />
                 {isAuthenticated ? (
-                    <button onClick={logout} className="text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                    <button onClick={logout} className="text-sm font-semibold text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white transition-colors">
                         Log Out
                     </button>
                 ) : (
