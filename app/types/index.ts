@@ -35,7 +35,11 @@ export interface Analysis {
   missingKeywords: string[];
   suggestions: string[];
   coverLetter?: string;
-  interviewQuestions?: string[];
+  interviewQuestions?: {
+    category: string;
+    question: string;
+    rationale: string;
+  }[];
   createdAt: string;
 }
 

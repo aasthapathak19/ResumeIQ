@@ -228,12 +228,18 @@ const Resume = () => {
                                 
                                 {feedback?.interviewQuestions && feedback.interviewQuestions.length > 0 ? (
                                     <ul className="space-y-6">
-                                        {feedback.interviewQuestions.map((q: string, i: number) => (
-                                            <li key={i} className="flex gap-4 items-start p-4 bg-gray-50 rounded-xl">
-                                                <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-700 font-bold rounded-full">
-                                                    {i + 1}
-                                                </span>
-                                                <p className="text-gray-800 font-medium text-lg pt-1">{q}</p>
+                                        {feedback.interviewQuestions.map((q, i) => (
+                                            <li key={i} className="flex flex-col gap-2 items-start p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                                                <div className="flex gap-4 w-full">
+                                                    <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold rounded-full">
+                                                        {i + 1}
+                                                    </span>
+                                                    <div className="flex flex-col w-full">
+                                                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{q.category}</span>
+                                                        <p className="text-gray-800 dark:text-gray-200 font-medium text-lg pt-1">{q.question}</p>
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 italic bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg">Why: {q.rationale}</p>
+                                                    </div>
+                                                </div>
                                             </li>
                                         ))}
                                     </ul>

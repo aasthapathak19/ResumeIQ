@@ -16,7 +16,11 @@ export interface IAnalysis extends Document {
   };
   suggestions: string[];
   coverLetter?: string;
-  interviewQuestions?: string[];
+  interviewQuestions?: {
+    category: string;
+    question: string;
+    rationale: string;
+  }[];
   scoreBreakdown?: {
     keywordMatch: number;
     skillsMatch: number;
@@ -58,7 +62,11 @@ const AnalysisSchema: Schema = new Schema({
   jobDescription: { type: String },
   suggestions: [{ type: String }],
   coverLetter: { type: String },
-  interviewQuestions: [{ type: String }],
+  interviewQuestions: [{
+    category: { type: String },
+    question: { type: String },
+    rationale: { type: String },
+  }],
   createdAt: { type: Date, default: Date.now },
 });
 

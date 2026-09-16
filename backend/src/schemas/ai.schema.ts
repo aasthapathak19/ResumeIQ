@@ -18,7 +18,11 @@ export const geminiResponseSchema = z.object({
   suggestions: z.array(z.string()),
   // Non-critical fields gracefully fallback instead of crashing the whole analysis
   coverLetter: z.string().nullable().catch(null),
-  interviewQuestions: z.array(z.string()).catch([]),
+  interviewQuestions: z.array(z.object({
+    category: z.string(),
+    question: z.string(),
+    rationale: z.string()
+  })).catch([]),
 });
 
 export type GeminiResponse = z.infer<typeof geminiResponseSchema>;

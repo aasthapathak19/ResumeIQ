@@ -40,6 +40,8 @@ app.get('/health', (req, res) => {
 // Centralized error handler should be the last middleware
 app.use(errorHandler);
 
+import { logger } from './utils/logger';
+
 // Start Server
 const startServer = async () => {
   try {
@@ -47,10 +49,10 @@ const startServer = async () => {
     await connectRedis();
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      logger.info(`🚀 Server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
 };

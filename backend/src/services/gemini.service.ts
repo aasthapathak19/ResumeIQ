@@ -26,10 +26,10 @@ export const analyzeResumeContent = async (filePath: string, jobDescription?: st
         "summary": string (2-3 sentences summarizing the candidate),
         "strengths": string[] (list of 3-5 strengths),
         "weaknesses": string[] (list of 3-5 areas of improvement),
-        "missingKeywords": string[] (list of important keywords from the JD that are missing),
+        "missingKeywords": string[] (list of important keywords missing from the JD, e.g. "React (Required for frontend)"),
         "suggestions": string[] (3 actionable tips to improve the resume),
         "coverLetter": string (A professional, engaging cover letter drafted based on the resume),
-        "interviewQuestions": string[] (5 targeted technical or behavioral interview questions to prepare for)
+        "interviewQuestions": object[] (5 targeted interview questions to prepare for, each object must have { "category": "Technical" | "Behavioral", "question": string, "rationale": string })
       }
     `;
 
